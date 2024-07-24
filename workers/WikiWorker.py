@@ -1,35 +1,16 @@
-import requests
-from bs4 import BeautifulSoup
+import time
+from workers.WikiWorker import WikiWorker
+from workers.YahooFinanceWorker import YahooFinanceWorker
 
-class WikiWorker:
-    def __init__(self):
-        self._url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-        
-    @staticmethod
-    def _extract_company_symbol(page_html):
-        soup = BeautifulSoup(page_html, 'lxml')
-        table = soup.find(id='constituents')
-        if not table:
-            print('Table with id "constituents" not found')
-            return []
-        
-        table_rows = table.find_all('tr')
-        for table_row in table_rows[1:]:
-            symbol = table_row.find('td').text.strip()
-            yield symbol
+def main():
+    scraper_start_time = time.time()
     
-    def get_sp_500_companies(self):
-        try:
-            response = requests.get(self._url)
-            response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
-        except requests.exceptions.RequestException as e:
-            print(f'Error fetching data: {e}')
-            return []
+    wikiWorker = WikiWorker()
+    current_workers = []
+    for symbol in WikiWorker.get_sp_500_companies():
+        YahooFinanceWorker = YahooFinanceWorker(symbol=symbol)
+        current_workers.append(YahooFinanceWorker)
         
-        return self._extract_company_symbol(response.text)
-
-
-if __name__ == "__main__":
-    worker = WikiWorker()
-    for company in worker.get_sp_500_companies():
-        print(company)
+    for i in range(len(current_workers)):
+        current_workers[i].join()
+    print('Extracting time took: ', round(time.time() - scraper_start_time, 1))
