@@ -7,6 +7,7 @@ class WikiWorker:
         
     @staticmethod
     def _extract_company_symbols(page_html):
+        """Extract company symbols from the Wikipedia page HTML."""
         soup = BeautifulSoup(page_html, 'lxml')
         table = soup.find(id='constituents')
         
@@ -26,6 +27,7 @@ class WikiWorker:
         return symbols
     
     def get_sp_500_companies(self):
+        """Fetch S&P 500 company symbols from Wikipedia."""
         try:
             response = requests.get(self._url)
             response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
